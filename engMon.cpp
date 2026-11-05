@@ -1,6 +1,8 @@
 #include <engMon.h>
 #include <fontLabel.h>
 #include <dispTools.h>
+#include <mask.h>
+
 #include <debug.h>
 
 #define ENG_MON_X	60
@@ -103,11 +105,12 @@ void tach::drawBackGround(void) { tachFace->drawSelf(); }
 
 void tach::eraseNeedle(void) {
 
-	float	angle;
-	point	ptA;
-	point	ptB;
-	point	ptC;
-	
+	float		angle;
+	point		ptA;
+	point		ptB;
+	point		ptC;
+	maskRect	ourMask(0,0,20,20);
+		
 	if (needleMapper &&  !isnan(oldValue)) {	
 		ptA.x = 0;
 		ptA.y = -needleLen;
@@ -129,8 +132,15 @@ void tach::eraseNeedle(void) {
 		ptC.x += ourCenter.x;
 		ptC.y += ourCenter.y;
 		
+		ourMask.centerRect(&ptA);
+		ourMask.setInverse(true);
+		tachFace->setMask(&ourMask);
+		screen->drawLine(&ourCenter,&ptA,&black);
 		screen->fillTriangle(&ptA,&ptB,&ptC,&black);
 		screen->fillCircle(ourCenter.x,ourCenter.y,9,&black);
+		tachFace->drawSelf();
+		tachFace->setMask(NULL);
+		//screen->drawRect(&ourMask,&green);
 	}
 }
 
@@ -163,10 +173,9 @@ void tach::drawNeedle(void) {
 		ptC.x += ourCenter.x;
 		ptC.y += ourCenter.y;
 		
+		screen->drawLine(&ourCenter,&ptA,&red);
 		screen->fillTriangle(&ptA,&ptB,&ptC,&red);
 		screen->fillCircle(ourCenter.x,ourCenter.y,9,&red);
-		
-		oldValue = value;
 	}
 } 
 
@@ -196,17 +205,41 @@ void engMon::setup(void) {
 	
 	frame.setRect(TACH_X,TACH_Y,TACH_W,TACH_H);
 	setFilePath(TACH_NAME);
-	tach* ourTach = new tach(&frame,mFilePath);
+	ourTach = new tach(&frame,mFilePath);
 	if (ourTach) {
 		ourTach->setNeedleLen(50);
 		ourTach->setSwing(0,4000,-120,120);
-		ourTach->setValue(1450);
+		ourTach->setValue(10);
 		addObj(ourTach);
 	}
 }
 
+timeObj	tachTimer(500);
+int		RPM = 0;
+bool		rising = true;
 
-void engMon::loop(void) {  }
+void engMon::loop(void) {
+
+	if (tachTimer.ding() && ourTach) {
+		if (rising) {
+			RPM = RPM + 40;
+			if (RPM>4000) {
+				rising = false;
+			} else {
+				ourTach->setValue(RPM);
+			}
+		}
+		if (!rising) {
+			RPM = RPM - 40;
+			if (RPM<0) {
+				rising = true;
+			} else {
+				ourTach->setValue(RPM);
+			}
+		}
+		tachTimer.start();
+	}
+}
 
 
 void engMon::drawSelf(void) { screen->fillScreen(&black); }
