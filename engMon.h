@@ -17,12 +17,16 @@ class gauge :	public drawObj {
 				gauge(rect* inRect);
 	virtual	~gauge(void);
 	
-	virtual	bool	isDifferent(float inVal);
+	
 	virtual	void	setValue(float inVal);
 	virtual	void	drawBackGround(void);
 	virtual	void	eraseNeedle(void);
 	virtual	void	drawNeedle(void);
 	virtual	void	drawSelf(void);
+	
+	protected:
+	
+	virtual	bool	isDifferent(float inVal);
 	
 				bool	needBackGnd;
 				float	value;
@@ -30,29 +34,65 @@ class gauge :	public drawObj {
 };
 
 
-
 //****************************************************************************************
-// tach
+// guage128x128x240Deg
 //****************************************************************************************
 
-class tach :	public gauge {
+
+#define DEF_NEEDLE_LEN	50
+
+
+class guage128x128x240Deg :	public gauge {
 
 	public:
-				tach(rect* inRect,const char* inBGPath);
-	virtual	~tach(void);
-	
-				void	setNeedleLen(int inLen);
-				void	setSwing(float startVal,float endVal,float startAngle,float endAngle);
-	virtual	bool	isDifferent(float inVal);
-	virtual	void	drawBackGround(void);
+				guage128x128x240Deg(rect* inRect,const char* inBGPath);
+	virtual	~guage128x128x240Deg(void);
+
+	virtual	void	setNeedleLen(int inLen);
+	virtual	void	setSwing(float startVal,float endVal,float startAngle=-120,float endAngle=120);
 	virtual	void	eraseNeedle(void);
 	virtual	void	drawNeedle(void);
-				
+	
+	protected:
+	
+	virtual	bool	isDifferent(float inVal);
+	virtual	void	drawBackGround(void);
+	virtual	float	setupNeedle(point* ptA,point* ptB,point* ptC,float inValue);
+	
 				bmpObj*	tachFace;
 				point		ourCenter;
 				int		needleLen;
 				mapper*	needleMapper;
 };
+	
+	
+	
+//****************************************************************************************
+// tach
+//****************************************************************************************
+
+class tach :	public guage128x128x240Deg {
+
+	public:
+				tach(rect* inRect,const char* inBGPath);
+	virtual	~tach(void);	
+};
+
+
+
+//****************************************************************************************
+// fuelGuage
+//****************************************************************************************
+
+
+class fuelGuage :	public guage128x128x240Deg {
+
+	public:
+				fuelGuage(rect* inRect,const char* inBGPath);
+	virtual	~fuelGuage(void);	
+};
+
+
 
 //****************************************************************************************
 // engMon
@@ -69,7 +109,8 @@ class engMon :	public panel {
 	virtual	void	drawSelf(void);
 				void	loop(void);
 				
-				tach*	ourTach;
+				tach*			ourTach;
+				fuelGuage*	ourFuelGuage;
 };
 	
 
