@@ -2,6 +2,7 @@
 #include <fontLabel.h>
 #include <dispTools.h>
 #include <mask.h>
+//#include <colorRect.h>
 
 #include <debug.h>
 
@@ -109,7 +110,8 @@ void tach::eraseNeedle(void) {
 	point		ptA;
 	point		ptB;
 	point		ptC;
-	maskRect	ourMask(0,0,20,20);
+	point		ptM;
+	maskRect	ourMask(0,0,14,14);
 		
 	if (needleMapper &&  !isnan(oldValue)) {	
 		ptA.x = 0;
@@ -118,21 +120,30 @@ void tach::eraseNeedle(void) {
 		ptB.y = 0;
 		ptC.x = +1;
 		ptC.y = 0;
+		ptM.x = 0;
+		ptM.y = -(needleLen-9);
 		
 		angle = needleMapper->map(oldValue);
 
 		rotate(&ptA,angle);
 		rotate(&ptB,angle);
 		rotate(&ptC,angle);
-	
+		rotate(&ptM,angle);
+		
 		ptA.x += ourCenter.x;
 		ptA.y += ourCenter.y;
 		ptB.x += ourCenter.x;
 		ptB.y += ourCenter.y;
 		ptC.x += ourCenter.x;
 		ptC.y += ourCenter.y;
+		ptM.x += ourCenter.x;
+		ptM.y += ourCenter.y;
 		
-		ourMask.centerRect(&ptA);
+		rect frame;
+		ourMask.centerRect(&ptM);
+		//screen->drawRect(&ourMask,&green);
+		frame.setRect(&ourMask);
+		frame.insetRect(2);
 		ourMask.setInverse(true);
 		tachFace->setMask(&ourMask);
 		screen->drawLine(&ourCenter,&ptA,&black);
@@ -140,7 +151,7 @@ void tach::eraseNeedle(void) {
 		screen->fillCircle(ourCenter.x,ourCenter.y,9,&black);
 		tachFace->drawSelf();
 		tachFace->setMask(NULL);
-		//screen->drawRect(&ourMask,&green);
+		
 	}
 }
 
@@ -159,7 +170,7 @@ void tach::drawNeedle(void) {
 		ptB.y = 0;
 		ptC.x = +1;
 		ptC.y = 0;
-		
+
 		angle = needleMapper->map(value);
 
 		rotate(&ptA,angle);
@@ -214,7 +225,7 @@ void engMon::setup(void) {
 	}
 }
 
-timeObj	tachTimer(500);
+timeObj	tachTimer(100);
 int		RPM = 0;
 bool		rising = true;
 
@@ -222,7 +233,7 @@ void engMon::loop(void) {
 
 	if (tachTimer.ding() && ourTach) {
 		if (rising) {
-			RPM = RPM + 40;
+			RPM = RPM + 20;
 			if (RPM>4000) {
 				rising = false;
 			} else {
@@ -230,7 +241,7 @@ void engMon::loop(void) {
 			}
 		}
 		if (!rising) {
-			RPM = RPM - 40;
+			RPM = RPM - 20;
 			if (RPM<0) {
 				rising = true;
 			} else {
