@@ -93,6 +93,20 @@ class fuelGuage :	public guage128x128x240Deg {
 };
 
 
+//****************************************************************************************
+// knotGauge
+//****************************************************************************************
+
+
+class knotGauge :	public guage128x128x240Deg {
+
+	public:
+				knotGauge(rect* inRect,const char* inBGPath);
+	virtual	~knotGauge(void);
+	
+	virtual	bool	isDifferent(float inVal);	
+};
+
 
 //****************************************************************************************
 // engMon
@@ -111,6 +125,7 @@ class engMon :	public panel {
 				
 				tach*			ourTach;
 				fuelGuage*	ourFuelGuage;
+				knotGauge*	ourKnotGauge;
 };
 	
 

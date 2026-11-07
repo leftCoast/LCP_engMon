@@ -9,23 +9,23 @@
 #define ENG_MON_X	60
 #define ENG_MON_Y	16
 
-#define TACH_X		5
+#define TACH_X		0
 #define TACH_Y		100
-#define TACH_W		128
+#define TACH_W		155
 #define TACH_H		TACH_W
-#define TACH_NAME	"tach128.bmp"
+#define TACH_NAME	"tach155.bmp"
 
-//#define SPEED_X		187
-//#define SPEED_Y		TACH_Y
-//#define SPEED_W		TACH_W
-//#define SPEED_H		TACH_W
-//#define SPEED_NAME	"speed128.bmp"
+#define SPEED_X		165
+#define SPEED_Y		TACH_Y
+#define SPEED_W		TACH_W
+#define SPEED_H		TACH_W
+#define SPEED_NAME	"speed155.bmp"
 
-#define FUEL_X		187			//96
-#define FUEL_Y		TACH_Y		// 292
+#define FUEL_X		81	
+#define FUEL_Y		TACH_Y + TACH_H		
 #define FUEL_W		TACH_W
 #define FUEL_H		TACH_W
-#define FUEL_NAME	"fuel128.bmp"
+#define FUEL_NAME	"fuel155.bmp"
 
 
 
@@ -185,8 +185,6 @@ void guage128x128x240Deg::drawNeedle(void) {
 		screen->drawLine(&ourCenter,&ptA,&red);
 		screen->fillTriangle(&ptA,&ptB,&ptC,&red);
 		screen->fillCircle(ourCenter.x,ourCenter.y,9,&red);
-		screen->drawCircle(ourCenter.x,ourCenter.y,132,&white);
-		screen->drawCircle(ourCenter.x,ourCenter.y,133,&white);
 	}
 } 
 
@@ -214,6 +212,24 @@ fuelGuage::fuelGuage(rect* inRect,const char* inBGPath)
 	
 fuelGuage::~fuelGuage(void) { }
 
+
+//****************************************************************************************
+// knotGauge
+//****************************************************************************************
+
+
+knotGauge::knotGauge(rect* inRect,const char* inBGPath)
+	: guage128x128x240Deg(inRect,inBGPath) { }
+
+	
+knotGauge::~knotGauge(void) { }
+
+bool knotGauge::isDifferent(float inVal) {
+
+	 return round(value*10) != round(inVal*10); }
+
+	
+
 //****************************************************************************************
 // engMon
 //****************************************************************************************
@@ -234,14 +250,13 @@ void engMon::setup(void) {
 	frame.setRect(ENG_MON_X,ENG_MON_Y,200,30);
 	aLbl = new fontLabel(&frame);
 	ourTxtPallette.setTypeFace(aLbl,panelTitle);
-	aLbl->setValue("Engine panel");
+	aLbl->setValue("Engine");
 	addObj(aLbl);
 	
 	frame.setRect(TACH_X,TACH_Y,TACH_W,TACH_H);
 	setFilePath(TACH_NAME);
 	ourTach = new tach(&frame,mFilePath);
 	if (ourTach) {
-		//ourTach->setNeedleLen(50);
 		ourTach->setSwing(0,4000,-120,120);
 		ourTach->setValue(10);
 		addObj(ourTach);
@@ -251,37 +266,92 @@ void engMon::setup(void) {
 	setFilePath(FUEL_NAME);
 	ourFuelGuage = new fuelGuage(&frame,mFilePath);
 	if (ourFuelGuage) {
-		//ourTach->setNeedleLen(50);
 		ourFuelGuage->setSwing(0,100,-120,120);
 		ourFuelGuage->setValue(37);
 		addObj(ourFuelGuage);
+	}
+	
+	frame.setRect(SPEED_X,SPEED_Y,SPEED_W,SPEED_H);
+	setFilePath(SPEED_NAME);
+	ourKnotGauge = new knotGauge(&frame,mFilePath);
+	if (ourKnotGauge) {
+		ourKnotGauge->setSwing(0,20,-120,120);
+		ourKnotGauge->setValue(5.4);
+		addObj(ourKnotGauge);
 	}
 }
 
 timeObj	tachTimer(100);
 int		RPM = 0;
-bool		rising = true;
+bool		risingRPM = true;
+
+timeObj	fuelTimer(100);
+int		level = 0;
+bool		risingLevel = true;
+
+timeObj	speedTimer(200);
+float		knots = 0;
+bool		risingSpeed = true;
 
 void engMon::loop(void) {
 
+	if (speedTimer.ding() && ourKnotGauge) {
+		if (risingSpeed) {
+			knots = knots + 0.1;
+			if (knots>8.5) {
+				risingSpeed = false;
+			} else {
+				ourKnotGauge->setValue(knots);
+			}
+		}
+		if (!risingSpeed) {
+			knots = knots - 0.1;
+			if (knots<2.5) {
+				risingSpeed = true;
+			} else {
+				ourKnotGauge->setValue(knots);
+			}
+		}
+		speedTimer.start();
+	}
+	
 	if (tachTimer.ding() && ourTach) {
-		if (rising) {
+		if (risingRPM) {
 			RPM = RPM + 20;
 			if (RPM>4000) {
-				rising = false;
+				risingRPM = false;
 			} else {
 				ourTach->setValue(RPM);
 			}
 		}
-		if (!rising) {
+		if (!risingRPM) {
 			RPM = RPM - 20;
 			if (RPM<0) {
-				rising = true;
+				risingRPM = true;
 			} else {
 				ourTach->setValue(RPM);
 			}
 		}
 		tachTimer.start();
+	}
+	if (fuelTimer.ding() && ourFuelGuage) {
+		if (risingLevel) {
+			level = level + 1;
+			if (level>100) {
+				risingLevel = false;
+			} else {
+				ourFuelGuage->setValue(level);
+			}
+		}
+		if (!risingLevel) {
+			level = level - 1;
+			if (level<0) {
+				risingLevel = true;
+			} else {
+				ourFuelGuage->setValue(level);
+			}
+		}
+		fuelTimer.start();
 	}
 }
 
