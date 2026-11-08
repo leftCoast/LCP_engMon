@@ -4,7 +4,7 @@
 
 
 #include	<lilOS.h>
-
+#include <bmpFlasher.h>
 
 //****************************************************************************************
 // gauge
@@ -126,7 +126,11 @@ class engMon :	public panel {
 				tach*			ourTach;
 				fuelGuage*	ourFuelGuage;
 				knotGauge*	ourKnotGauge;
+				bmpFlasher*	lowOilPsi;
+				bmpFlasher*	overheat;
 };
+
+
 	
 
 #endif

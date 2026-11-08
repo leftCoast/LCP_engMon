@@ -2,18 +2,18 @@
 #include <fontLabel.h>
 #include <dispTools.h>
 #include <mask.h>
-//#include <colorRect.h>
+#include <dispTools.h>
 
 #include <debug.h>
 
 #define ENG_MON_X	60
 #define ENG_MON_Y	16
 
-#define TACH_X		0
-#define TACH_Y		100
-#define TACH_W		155
-#define TACH_H		TACH_W
-#define TACH_NAME	"tach155.bmp"
+#define TACH_X			0
+#define TACH_Y			50
+#define TACH_W			155
+#define TACH_H			TACH_W
+#define TACH_NAME		"tach155.bmp"
 
 #define SPEED_X		165
 #define SPEED_Y		TACH_Y
@@ -21,12 +21,35 @@
 #define SPEED_H		TACH_W
 #define SPEED_NAME	"speed155.bmp"
 
-#define FUEL_X		81	
-#define FUEL_Y		TACH_Y + TACH_H		
-#define FUEL_W		TACH_W
-#define FUEL_H		TACH_W
-#define FUEL_NAME	"fuel155.bmp"
+#define FUEL_X			81	
+#define FUEL_Y			TACH_Y + TACH_H		
+#define FUEL_W			TACH_W
+#define FUEL_H			TACH_W
+#define FUEL_NAME		"fuel155.bmp"
 
+#define OILPSI_X		20
+#define OILPSI_Y		380
+#define OILPSI_W		32
+#define OILPSI_H		32
+#define OILPSI_ON		"ltYelo32.bmp"
+#define OILPSI_OFF	"dkYelo32.bmp"
+#define OILPSI_LBL	"Low oil psi"
+#define OIL_LBL_X		OILPSI_X + 40
+#define OIL_LBL_Y		OILPSI_Y + 16
+#define OIL_LBL_W		100
+#define OIL_LBL_H		17		
+
+#define TEMP_X			OILPSI_X
+#define TEMP_Y			OILPSI_Y + 50
+#define TEMP_W			32
+#define TEMP_H			32
+#define TEMP_ON		"ltBlue32.bmp"
+#define TEMP_OFF		"dkBlue32.bmp"
+#define TEMP_LBL		"Overtemp"
+#define TEMP_LBL_X	TEMP_X + 40
+#define TEMP_LBL_Y	TEMP_Y + 16
+#define TEMP_LBL_W	OIL_LBL_W
+#define TEMP_LBL_H	OIL_LBL_H
 
 
 //****************************************************************************************
@@ -246,6 +269,13 @@ void engMon::setup(void) {
 
 	rect			frame;
 	fontLabel*	aLbl;
+	char*			onPath;
+	char*			offPath;
+	fontLabel*	aLabel;
+	
+	onPath	= NULL;
+	offPath	= NULL;
+	aLabel	= NULL;
 	
 	frame.setRect(ENG_MON_X,ENG_MON_Y,200,30);
 	aLbl = new fontLabel(&frame);
@@ -279,7 +309,45 @@ void engMon::setup(void) {
 		ourKnotGauge->setValue(5.4);
 		addObj(ourKnotGauge);
 	}
+
+	frame.setRect(OILPSI_X,OILPSI_Y,OILPSI_W,OILPSI_H);
+	setFilePath(OILPSI_ON);
+	heapStr(&onPath,mFilePath);
+	setFilePath(OILPSI_OFF);
+	heapStr(&offPath,mFilePath);
+	lowOilPsi = new bmpFlasher(&frame,onPath,offPath);
+	if (lowOilPsi) {
+		addObj(lowOilPsi);
+	}
+	frame.setRect(OIL_LBL_X,OIL_LBL_Y,OIL_LBL_W,OIL_LBL_H);
+	aLabel = new fontLabel(&frame);
+	if (aLabel) {
+		aLabel->setValue(OILPSI_LBL);
+		ourTxtPallette.setTypeFace(aLabel,tinyLabel);
+		addObj(aLabel);
+	}
+	
+	frame.setRect(TEMP_X,TEMP_Y,TEMP_W,TEMP_H);
+	setFilePath(TEMP_ON);
+	heapStr(&onPath,mFilePath);
+	setFilePath(TEMP_OFF);
+	heapStr(&offPath,mFilePath);
+	overheat = new bmpFlasher(&frame,onPath,offPath);
+	if (overheat) {
+		addObj(overheat);
+	}
+	frame.setRect(TEMP_LBL_X,TEMP_LBL_Y,TEMP_LBL_W,TEMP_LBL_H);
+	aLabel = new fontLabel(&frame);
+	if (aLabel) {
+		aLabel->setValue(TEMP_LBL);
+		ourTxtPallette.setTypeFace(aLabel,tinyLabel);
+		addObj(aLabel);
+	}
+	
+	freeStr(&onPath);
+	freeStr(&offPath);
 }
+
 
 timeObj	tachTimer(100);
 int		RPM = 0;
