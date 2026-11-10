@@ -3,7 +3,7 @@
 #include <dispTools.h>
 #include <mask.h>
 #include <dispTools.h>
-
+#include <navII.h>
 #include <debug.h>
 
 #define ENG_MON_X	60
@@ -100,7 +100,30 @@ void gauge::drawSelf(void) {
 	eraseNeedle();
 	drawNeedle();
 }
+
+
 	
+//****************************************************************************************
+// NMEAgauge
+//****************************************************************************************
+
+
+NMEAgauge::NMEAgauge(rect* inRect)
+	: gauge(inRect) { ourHandler = NULL; }
+	
+	 
+NMEAgauge::~NMEAgauge(void) {  }
+	
+	
+// Hand in our NMEA handler and, if non NULL, fire us up in auto.
+void NMEAgauge::setHandler(msgHandler* inHandler) {
+
+	ourHandler = inHandler;	// Save off our handler.
+	if (ourHandler) {			// If it's not NULL..
+		hookup();				// Hook us up for aute.
+	}								// Else, why bother?
+}
+				
 	
 	
 //****************************************************************************************
@@ -109,13 +132,14 @@ void gauge::drawSelf(void) {
 
 
 guage128x128x240Deg::guage128x128x240Deg(rect* inRect,const char* inBGPath)
-	: gauge(inRect) {
+	: NMEAgauge(inRect) {
 
 	tachFace			= new bmpObj(inRect,inBGPath);
 	needleMapper	= NULL;
 	ourCenter		= inRect->getCenter();
 	needleLen		= DEF_NEEDLE_LEN;
 }
+
 
 guage128x128x240Deg::~guage128x128x240Deg(void) { if (needleMapper) delete(needleMapper); }
 
@@ -198,7 +222,7 @@ void guage128x128x240Deg::eraseNeedle(void) {
 
 void guage128x128x240Deg::drawNeedle(void) {
 
-	float	angle;
+	//float	angle;
 	point	ptA;
 	point	ptB;
 	point	ptC;
@@ -224,6 +248,17 @@ tach::tach(rect* inRect,const char* inBGPath)
 tach::~tach(void) { }
 
 
+void tach::idle(void) {
+
+	float newRPM;
+	
+	if (ourHandler) {
+		newRPM = ((engParam*)ourHandler)->getRPM();
+		setValue(newRPM);
+	}
+}
+
+
 //****************************************************************************************
 // fuelGuage
 //****************************************************************************************
@@ -234,6 +269,17 @@ fuelGuage::fuelGuage(rect* inRect,const char* inBGPath)
 
 	
 fuelGuage::~fuelGuage(void) { }
+
+
+void fuelGuage::idle(void) {
+
+	float newLevel;
+	
+	if (ourHandler) {
+		newLevel = ((fluidLevelObj*)ourHandler)->getLevel();
+		setValue(newLevel);
+	}
+}
 
 
 //****************************************************************************************
@@ -251,7 +297,16 @@ bool knotGauge::isDifferent(float inVal) {
 
 	 return round(value*10) != round(inVal*10); }
 
+
+void knotGauge::idle(void) {
+
+	float newSpeed;
 	
+	if (ourHandler) {
+		newSpeed = ((waterSpeedObj*)ourHandler)->knots;
+		setValue(newSpeed);
+	}
+}
 
 //****************************************************************************************
 // engMon
@@ -288,7 +343,8 @@ void engMon::setup(void) {
 	ourTach = new tach(&frame,mFilePath);
 	if (ourTach) {
 		ourTach->setSwing(0,4000,-120,120);
-		ourTach->setValue(10);
+		ourTach->setValue(0);
+		ourTach->setHandler(ourNavApp.engHdler);
 		addObj(ourTach);
 	}
 	
@@ -297,7 +353,8 @@ void engMon::setup(void) {
 	ourFuelGuage = new fuelGuage(&frame,mFilePath);
 	if (ourFuelGuage) {
 		ourFuelGuage->setSwing(0,100,-120,120);
-		ourFuelGuage->setValue(37);
+		ourFuelGuage->setValue(0);
+		ourFuelGuage->setHandler(ourNavApp.fuelGauge);
 		addObj(ourFuelGuage);
 	}
 	
@@ -306,7 +363,8 @@ void engMon::setup(void) {
 	ourKnotGauge = new knotGauge(&frame,mFilePath);
 	if (ourKnotGauge) {
 		ourKnotGauge->setSwing(0,20,-120,120);
-		ourKnotGauge->setValue(5.4);
+		ourKnotGauge->setValue(0);
+		ourFuelGuage->setHandler(ourNavigator->knotMeter);
 		addObj(ourKnotGauge);
 	}
 
@@ -343,6 +401,7 @@ void engMon::setup(void) {
 		ourTxtPallette.setTypeFace(aLabel,tinyLabel);
 		addObj(aLabel);
 	}
+	//overheat->manualSetHiLow(true);
 	
 	freeStr(&onPath);
 	freeStr(&offPath);
@@ -361,8 +420,26 @@ timeObj	speedTimer(200);
 float		knots = 0;
 bool		risingSpeed = true;
 
+timeObj	oilTimer(4000);
+bool		oilLow = false;
+
+timeObj	tempTimer(3000);
+bool		tempHi = false;
+
 void engMon::loop(void) {
 
+	if (oilTimer.ding()) {
+		oilLow = !oilLow;
+		lowOilPsi->manualSetHiLow(oilLow);
+		oilTimer.start();
+	}
+	
+	if (tempTimer.ding()) {
+		tempHi = !oilLow;
+		overheat->manualSetHiLow(tempHi);
+		tempTimer.start();
+	}
+	/*
 	if (speedTimer.ding() && ourKnotGauge) {
 		if (risingSpeed) {
 			knots = knots + 0.1;
@@ -421,6 +498,7 @@ void engMon::loop(void) {
 		}
 		fuelTimer.start();
 	}
+	*/
 }
 
 

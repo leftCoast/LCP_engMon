@@ -2,9 +2,10 @@
 #define engMon_h
 
 
-
 #include	<lilOS.h>
 #include <bmpFlasher.h>
+#include <handlers.h>
+
 
 //****************************************************************************************
 // gauge
@@ -16,7 +17,6 @@ class gauge :	public drawObj {
 	public:
 				gauge(rect* inRect);
 	virtual	~gauge(void);
-	
 	
 	virtual	void	setValue(float inVal);
 	virtual	void	drawBackGround(void);
@@ -34,6 +34,26 @@ class gauge :	public drawObj {
 };
 
 
+
+//****************************************************************************************
+// NMEAgauge
+//****************************************************************************************
+
+
+class NMEAgauge :	public gauge,
+						public idler {
+
+	public:
+				NMEAgauge(rect* inRect);
+	virtual	~NMEAgauge(void);
+	
+	virtual	void	setHandler(msgHandler* inHandler);
+				
+				msgHandler*	ourHandler;
+};
+	
+	
+				
 //****************************************************************************************
 // guage128x128x240Deg
 //****************************************************************************************
@@ -42,7 +62,7 @@ class gauge :	public drawObj {
 #define DEF_NEEDLE_LEN	50
 
 
-class guage128x128x240Deg :	public gauge {
+class guage128x128x240Deg :	public NMEAgauge {
 
 	public:
 				guage128x128x240Deg(rect* inRect,const char* inBGPath);
@@ -75,7 +95,9 @@ class tach :	public guage128x128x240Deg {
 
 	public:
 				tach(rect* inRect,const char* inBGPath);
-	virtual	~tach(void);	
+	virtual	~tach(void);
+	
+	virtual	void	idle(void);	
 };
 
 
@@ -89,7 +111,9 @@ class fuelGuage :	public guage128x128x240Deg {
 
 	public:
 				fuelGuage(rect* inRect,const char* inBGPath);
-	virtual	~fuelGuage(void);	
+	virtual	~fuelGuage(void);
+	
+	virtual	void	idle(void);	
 };
 
 
@@ -104,7 +128,9 @@ class knotGauge :	public guage128x128x240Deg {
 				knotGauge(rect* inRect,const char* inBGPath);
 	virtual	~knotGauge(void);
 	
-	virtual	bool	isDifferent(float inVal);	
+	virtual	bool	isDifferent(float inVal);
+	
+	virtual	void	idle(void);	
 };
 
 
