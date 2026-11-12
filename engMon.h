@@ -48,8 +48,10 @@ class NMEAgauge :	public gauge,
 	virtual	~NMEAgauge(void);
 	
 	virtual	void	setHandler(msgHandler* inHandler);
+	virtual	void	setWaitTime(float inMs);
 				
 				msgHandler*	ourHandler;
+				timeObj		ourTimer;
 };
 	
 	
@@ -149,6 +151,7 @@ class engMon :	public panel {
 	virtual	void	drawSelf(void);
 				void	loop(void);
 				
+				timeObj*		alarmTimer;
 				tach*			ourTach;
 				fuelGuage*	ourFuelGuage;
 				knotGauge*	ourKnotGauge;

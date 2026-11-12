@@ -109,7 +109,11 @@ void gauge::drawSelf(void) {
 
 
 NMEAgauge::NMEAgauge(rect* inRect)
-	: gauge(inRect) { ourHandler = NULL; }
+	: gauge(inRect) {
+	
+	ourHandler = NULL;
+	setWaitTime(1000);			// We'll use 1 second as a default.
+}
 	
 	 
 NMEAgauge::~NMEAgauge(void) {  }
@@ -123,7 +127,13 @@ void NMEAgauge::setHandler(msgHandler* inHandler) {
 		hookup();				// Hook us up for aute.
 	}								// Else, why bother?
 }
-				
+
+	
+void NMEAgauge::setWaitTime(float inMs) {
+
+	ourTimer.setTime(inMs);
+}
+	
 	
 	
 //****************************************************************************************
@@ -222,7 +232,6 @@ void guage128x128x240Deg::eraseNeedle(void) {
 
 void guage128x128x240Deg::drawNeedle(void) {
 
-	//float	angle;
 	point	ptA;
 	point	ptB;
 	point	ptC;
@@ -252,9 +261,12 @@ void tach::idle(void) {
 
 	float newRPM;
 	
-	if (ourHandler) {
-		newRPM = ((engParam*)ourHandler)->getRPM();
-		setValue(newRPM);
+	if (ourTimer.ding()) {
+		if (ourHandler) {
+			newRPM = ((engParam*)ourHandler)->getRPM();
+			setValue(newRPM);
+		}
+		ourTimer.start();
 	}
 }
 
@@ -275,9 +287,13 @@ void fuelGuage::idle(void) {
 
 	float newLevel;
 	
-	if (ourHandler) {
-		newLevel = ((fluidLevelObj*)ourHandler)->getLevel();
-		setValue(newLevel);
+	if (ourTimer.ding()) {
+		if (ourHandler) {
+			newLevel = ((fluidLevelObj*)ourHandler)->getLevel();
+			//Serial.println(newLevel);
+			setValue(newLevel);
+		}
+		ourTimer.start();
 	}
 }
 
@@ -314,10 +330,19 @@ void knotGauge::idle(void) {
 
 
 engMon::engMon(int newAppID)
-	: panel(newAppID) { ourTach = NULL; }
+	: panel(newAppID) {
+	
+	alarmTimer		= NULL;
+	ourTach			= NULL;
+	ourFuelGuage	= NULL;
+	ourKnotGauge	= NULL;
+	lowOilPsi		= NULL;
+	overheat			= NULL;
+	alarmTimer		= new timeObj(1000);
+}
 
 
-engMon::~engMon(void) {  }
+engMon::~engMon(void) { if (alarmTimer) delete(alarmTimer); }
 
 
 void engMon::setup(void) {
@@ -401,104 +426,22 @@ void engMon::setup(void) {
 		ourTxtPallette.setTypeFace(aLabel,tinyLabel);
 		addObj(aLabel);
 	}
-	//overheat->manualSetHiLow(true);
 	
 	freeStr(&onPath);
 	freeStr(&offPath);
 }
 
 
-timeObj	tachTimer(100);
-int		RPM = 0;
-bool		risingRPM = true;
-
-timeObj	fuelTimer(100);
-int		level = 0;
-bool		risingLevel = true;
-
-timeObj	speedTimer(200);
-float		knots = 0;
-bool		risingSpeed = true;
-
-timeObj	oilTimer(4000);
-bool		oilLow = false;
-
-timeObj	tempTimer(3000);
-bool		tempHi = false;
-
 void engMon::loop(void) {
 
-	if (oilTimer.ding()) {
-		oilLow = !oilLow;
-		lowOilPsi->manualSetHiLow(oilLow);
-		oilTimer.start();
-	}
+	alarms ourAlarms;
 	
-	if (tempTimer.ding()) {
-		tempHi = !oilLow;
-		overheat->manualSetHiLow(tempHi);
-		tempTimer.start();
+	if (alarmTimer->ding()) {
+		ourAlarms = ourNavApp.eAlarmHdler->getAlarms();
+		lowOilPsi->manualSetHiLow(ourAlarms.lowOilPSI);
+		overheat->manualSetHiLow(ourAlarms.overTemp);
+		alarmTimer->start();
 	}
-	/*
-	if (speedTimer.ding() && ourKnotGauge) {
-		if (risingSpeed) {
-			knots = knots + 0.1;
-			if (knots>8.5) {
-				risingSpeed = false;
-			} else {
-				ourKnotGauge->setValue(knots);
-			}
-		}
-		if (!risingSpeed) {
-			knots = knots - 0.1;
-			if (knots<2.5) {
-				risingSpeed = true;
-			} else {
-				ourKnotGauge->setValue(knots);
-			}
-		}
-		speedTimer.start();
-	}
-	
-	if (tachTimer.ding() && ourTach) {
-		if (risingRPM) {
-			RPM = RPM + 20;
-			if (RPM>4000) {
-				risingRPM = false;
-			} else {
-				ourTach->setValue(RPM);
-			}
-		}
-		if (!risingRPM) {
-			RPM = RPM - 20;
-			if (RPM<0) {
-				risingRPM = true;
-			} else {
-				ourTach->setValue(RPM);
-			}
-		}
-		tachTimer.start();
-	}
-	if (fuelTimer.ding() && ourFuelGuage) {
-		if (risingLevel) {
-			level = level + 1;
-			if (level>100) {
-				risingLevel = false;
-			} else {
-				ourFuelGuage->setValue(level);
-			}
-		}
-		if (!risingLevel) {
-			level = level - 1;
-			if (level<0) {
-				risingLevel = true;
-			} else {
-				ourFuelGuage->setValue(level);
-			}
-		}
-		fuelTimer.start();
-	}
-	*/
 }
 
 
