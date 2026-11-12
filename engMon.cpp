@@ -290,7 +290,6 @@ void fuelGuage::idle(void) {
 	if (ourTimer.ding()) {
 		if (ourHandler) {
 			newLevel = ((fluidLevelObj*)ourHandler)->getLevel();
-			//Serial.println(newLevel);
 			setValue(newLevel);
 		}
 		ourTimer.start();
@@ -389,7 +388,7 @@ void engMon::setup(void) {
 	if (ourKnotGauge) {
 		ourKnotGauge->setSwing(0,20,-120,120);
 		ourKnotGauge->setValue(0);
-		ourFuelGuage->setHandler(ourNavigator->knotMeter);
+		ourKnotGauge->setHandler(ourNavigator->knotMeter);
 		addObj(ourKnotGauge);
 	}
 
