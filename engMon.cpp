@@ -257,6 +257,9 @@ tach::tach(rect* inRect,const char* inBGPath)
 tach::~tach(void) { }
 
 
+bool tach::isDifferent(float inVal) { return round(value/10.0) != round(inVal/10.0); }
+
+
 void tach::idle(void) {
 
 	float newRPM;

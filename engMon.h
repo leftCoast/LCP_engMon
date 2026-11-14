@@ -99,7 +99,11 @@ class tach :	public guage128x128x240Deg {
 				tach(rect* inRect,const char* inBGPath);
 	virtual	~tach(void);
 	
-	virtual	void	idle(void);	
+	virtual	void	idle(void);
+	
+	protected:
+	
+	virtual	bool	isDifferent(float inVal);
 };
 
 
