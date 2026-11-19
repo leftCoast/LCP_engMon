@@ -31,8 +31,8 @@
 #define OILPSI_Y		380
 #define OILPSI_W		32
 #define OILPSI_H		32
-#define OILPSI_ON		"ltYelo32.bmp"
-#define OILPSI_OFF	"dkYelo32.bmp"
+#define OILPSI_ON		"LEDYlo32.bmp"
+#define OILPSI_OFF	"LEDBlk32.bmp"
 #define OILPSI_LBL	"Low oil psi"
 #define OIL_LBL_X		OILPSI_X + 40
 #define OIL_LBL_Y		OILPSI_Y + 16
@@ -43,8 +43,8 @@
 #define TEMP_Y			OILPSI_Y + 50
 #define TEMP_W			32
 #define TEMP_H			32
-#define TEMP_ON		"ltBlue32.bmp"
-#define TEMP_OFF		"dkBlue32.bmp"
+#define TEMP_ON		"LEDBlu32.bmp"
+#define TEMP_OFF		"LEDBlk32.bmp"
 #define TEMP_LBL		"Overtemp"
 #define TEMP_LBL_X	TEMP_X + 40
 #define TEMP_LBL_Y	TEMP_Y + 16
@@ -440,8 +440,18 @@ void engMon::loop(void) {
 	
 	if (alarmTimer->ding()) {
 		ourAlarms = ourNavApp.eAlarmHdler->getAlarms();
-		lowOilPsi->manualSetHiLow(ourAlarms.lowOilPSI);
-		overheat->manualSetHiLow(ourAlarms.overTemp);
+		if (ourAlarms.lowOilPSI) {
+			lowOilPsi->setOnOff(true);
+		} else {
+			lowOilPsi->setOnOff(false);
+			lowOilPsi->manualSetHiLow(false);
+		}
+		if (ourAlarms.overTemp) {
+			overheat->setOnOff(true);
+		} else {
+			overheat->setOnOff(false);
+			overheat->manualSetHiLow(false);
+		}
 		alarmTimer->start();
 	}
 }
