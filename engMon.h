@@ -157,7 +157,7 @@ class engMon :	public panel {
 				
 				timeObj*		alarmTimer;
 				tach*			ourTach;
-				fuelGuage*	ourFuelGuage;
+				fuelGuage*	ourFuelGauge;
 				knotGauge*	ourKnotGauge;
 				bmpFlasher*	lowOilPsi;
 				bmpFlasher*	overheat;

@@ -7,10 +7,10 @@
 #include <debug.h>
 
 #define ENG_MON_X	60
-#define ENG_MON_Y	16
+#define ENG_MON_Y	25
 
 #define TACH_X			0
-#define TACH_Y			50
+#define TACH_Y			60
 #define TACH_W			155
 #define TACH_H			TACH_W
 #define TACH_NAME		"tach155.bmp"
@@ -292,7 +292,7 @@ void fuelGuage::idle(void) {
 	
 	if (ourTimer.ding()) {
 		if (ourHandler) {
-			newLevel = ((fluidLevelObj*)ourHandler)->getLevel();
+			newLevel = ((fluidLevelReader*)ourHandler)->getLevel(fuel,0);
 			setValue(newLevel);
 		}
 		ourTimer.start();
@@ -336,7 +336,7 @@ engMon::engMon(int newAppID)
 	
 	alarmTimer		= NULL;
 	ourTach			= NULL;
-	ourFuelGuage	= NULL;
+	ourFuelGauge	= NULL;
 	ourKnotGauge	= NULL;
 	lowOilPsi		= NULL;
 	overheat			= NULL;
@@ -377,12 +377,12 @@ void engMon::setup(void) {
 	
 	frame.setRect(FUEL_X,FUEL_Y,FUEL_W,FUEL_H);
 	setFilePath(FUEL_NAME);
-	ourFuelGuage = new fuelGuage(&frame,mFilePath);
-	if (ourFuelGuage) {
-		ourFuelGuage->setSwing(0,100,-120,120);
-		ourFuelGuage->setValue(0);
-		ourFuelGuage->setHandler(ourNavApp.fuelGauge);
-		addObj(ourFuelGuage);
+	ourFuelGauge = new fuelGuage(&frame,mFilePath);
+	if (ourFuelGauge) {
+		ourFuelGauge->setSwing(0,100,-120,120);
+		ourFuelGauge->setValue(0);
+		ourFuelGauge->setHandler(ourNavApp.fuelGauge);
+		addObj(ourFuelGauge);
 	}
 	
 	frame.setRect(SPEED_X,SPEED_Y,SPEED_W,SPEED_H);
